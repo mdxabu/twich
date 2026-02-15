@@ -10,6 +10,8 @@ import (
 	"github.com/spf13/cobra"
 )
 
+var username string
+
 // chatCmd represents the chat command
 var chatCmd = &cobra.Command{
 	Use:   "chat",
@@ -20,22 +22,16 @@ and usage of using your command. For example:
 Cobra is a CLI library for Go that empowers applications.
 This application is a tool to generate the needed files
 to quickly create a Cobra application.`,
+
 	Run: func(cmd *cobra.Command, args []string) {
-		
-		chat.FetchChat()
+
+		chat.FetchChat(username)
 	},
 }
 
 func init() {
 	rootCmd.AddCommand(chatCmd)
 
-	// Here you will define your flags and configuration settings.
+	chatCmd.Flags().StringVarP(&username, "username", "u", "", "username to send stream chats")
 
-	// Cobra supports Persistent Flags which will work for this command
-	// and all subcommands, e.g.:
-	// chatCmd.PersistentFlags().String("foo", "", "A help for foo")
-
-	// Cobra supports local flags which will only run when this command
-	// is called directly, e.g.:
-	// chatCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
 }

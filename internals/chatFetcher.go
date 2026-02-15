@@ -7,14 +7,14 @@ import (
 )
 
 // First gonna try with anonymous mode
-func FetchChat() {
+func FetchChat(username string) {
 	client := twitch.NewAnonymousClient()
 
 	client.OnPrivateMessage(func(message twitch.PrivateMessage) {
 		fmt.Println(message.Time.Local().Format("15:04:05")+" [" + message.User.DisplayName + "]: " + message.Message)
 	})
 
-	client.Join("mdxabu")
+	client.Join(username)
 
 	err := client.Connect()
 	if err != nil {
