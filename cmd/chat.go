@@ -1,12 +1,12 @@
 /*
-Copyright © 2026 NAME HERE <EMAIL ADDRESS>
-
+Copyright © 2026 @mdxabu
 */
 package cmd
 
 import (
-	"fmt"
+	// "fmt"
 
+	chat "github.com/mdxabu/twich/internals"
 	"github.com/spf13/cobra"
 )
 
@@ -21,7 +21,8 @@ Cobra is a CLI library for Go that empowers applications.
 This application is a tool to generate the needed files
 to quickly create a Cobra application.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println("chat called")
+		
+		chat.FetchChat()
 	},
 }
 
