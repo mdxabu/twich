@@ -3,7 +3,7 @@ Twitch Chat TUI in Go
 
 | Command | Description | Usage |
 |---------|------------|--------|
-| chat | - Fetches the Twitch live stream chat in the terminal.<brCurrently, you can only view messages. Sending messages requires authentication. | `twich chat -u "<username>"`<br> or <br>`twich chat --username "<username>"` |
+| chat | - Fetches the Twitch live stream chat in the terminal.Currently, you can only view messages. Sending messages requires authentication. | `twich chat -u "<username>"`<br> or <br>`twich chat --username "<username>"` |
 
 ## Example
 ### Twitch Chat
