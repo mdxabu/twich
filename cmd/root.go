@@ -17,6 +17,8 @@ var rootCmd = &cobra.Command{
 	Short: "Twitch Chat TUI in Go",
 	Long: `Twitch Chat TUI in Go`,
 	
+	
+	
 
 }
 
