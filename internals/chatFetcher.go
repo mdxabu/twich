@@ -27,6 +27,7 @@ import (
 		
 
 // First gonna try with anonymous mode
+// TODO: Enable message sending option with Auth for Twitch and Youtube
 func FetchChat(username string) {
 	client := twitch.NewAnonymousClient()
 	
