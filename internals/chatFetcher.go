@@ -41,7 +41,7 @@ func FetchChat(username string) {
 			message.Time.Local().Format("15:04:05"),
 		)
 		
-		displayName := message.User.DisplayName
+		displayName := "@"+message.User.DisplayName
 		
 		userColor, exists := userColorMap[displayName]
 		
