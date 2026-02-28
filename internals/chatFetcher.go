@@ -2,15 +2,21 @@ package chat
 
 import (
 	"bufio"
+	_ "embed" // Required for go:embed
 	"encoding/json"
 	"fmt"
 	"math/rand"
+	"os"
 	"os/exec"
+	"path/filepath"
 	"time"
 
 	"github.com/fatih/color"
 	"github.com/gempir/go-twitch-irc/v4"
 )
+
+//go:embed yt_proxy.py
+var ytProxySource string
 
 var (
 	MessageColor = color.New(color.FgHiWhite)
@@ -34,77 +40,81 @@ func getColoredUser(displayName string) string {
 }
 
 func getColoredYTUser(displayName string) string {
-	return ytUserColor.Sprintd(displayName)
+	// Fixed: Sprintd -> Sprint
+	return ytUserColor.Sprint(displayName)
 }
 
-func printMessage(author, message string) {
+func printFormattedMessage(author, message, platform string) {
 	timestamp := timeColor.Sprint(time.Now().Format("15:04:05"))
-	user := getColoredUser(author)
+	var user string
+	if platform == "yt" {
+		user = getColoredYTUser(author)
+	} else {
+		user = getColoredUser(author)
+	}
 	msg := MessageColor.Sprint(message)
 	fmt.Printf("%s [%s]: %s\n", timestamp, user, msg)
 }
 
-// FetchCombinedChat runs both Twitch and YouTube in parallel
 func FetchCombinedChat(twitchUser string, ytVideoID string) {
 	rand.Seed(time.Now().UnixNano())
 
-	// 1. Start Twitch in a goroutine
-	go func() {
-		client := twitch.NewAnonymousClient()
-		client.OnPrivateMessage(func(message twitch.PrivateMessage) {
-			printMessage(message.User.DisplayName, message.Message)
-		})
-		client.Join(twitchUser)
-		if err := client.Connect(); err != nil {
-			fmt.Printf("Twitch Error: %v\n", err)
-		}
-	}()
-
-	// 2. Start YouTube via Python Proxy
-	go func() {
-		if ytVideoID == "" {
-			return
-		}
-
-		cmd := exec.Command("python3", "internals/yt_proxy.py", ytVideoID)
-
-		// Capture standard error so we can see Python crashes
-		stderr, _ := cmd.StderrPipe()
-		stdout, _ := cmd.StdoutPipe()
-
-		if err := cmd.Start(); err != nil {
-			fmt.Printf("Failed to start Python: %v\n", err)
-			return
-		}
-
-		// Print Python errors in a separate goroutine
+	// 1. Start Twitch
+	if twitchUser != "" {
 		go func() {
-			errScanner := bufio.NewScanner(stderr)
-			for errScanner.Scan() {
-				fmt.Printf("YouTube Proxy Error: %s\n", errScanner.Text())
+			client := twitch.NewAnonymousClient()
+			client.OnPrivateMessage(func(message twitch.PrivateMessage) {
+				printFormattedMessage(message.User.DisplayName, message.Message, "twitch")
+			})
+			client.Join(twitchUser)
+			if err := client.Connect(); err != nil {
+				fmt.Printf("Twitch Error: %v\n", err)
 			}
 		}()
+	}
 
-		scanner := bufio.NewScanner(stdout)
-		for scanner.Scan() {
-			var data struct {
-				Author  string `json:"author"`
-				Message string `json:"message"`
+	// 2. Start YouTube via Embedded Python Proxy
+	if ytVideoID != "" {
+		go func() {
+			// Write the embedded script to a temporary file
+			tmpFile := filepath.Join(os.TempDir(), "twich_yt_proxy.py")
+			err := os.WriteFile(tmpFile, []byte(ytProxySource), 0644)
+			if err != nil {
+				fmt.Printf("Failed to setup YT proxy: %v\n", err)
+				return
 			}
-			if err := json.Unmarshal(scanner.Bytes(), &data); err == nil {
-				// Use YouTube color and @ for YouTube users
-				timestamp := timeColor.Sprint(time.Now().Format("15:04:05"))
-				user := getColoredYTUser(data.Author)
-				msg := MessageColor.Sprint(data.Message)
-				fmt.Printf("%s [%s]: %s\n", timestamp, user, msg)
+			defer os.Remove(tmpFile)
+
+			cmd := exec.Command("python3", tmpFile, ytVideoID)
+			stderr, _ := cmd.StderrPipe()
+			stdout, _ := cmd.StdoutPipe()
+
+			if err := cmd.Start(); err != nil {
+				fmt.Printf("Failed to start Python: %v\n", err)
+				return
 			}
-		}
 
-		if err := cmd.Wait(); err != nil {
-			fmt.Printf("Python script exited with error: %v\n", err)
-		}
-	}()
+			// Capture Python errors
+			go func() {
+				errScanner := bufio.NewScanner(stderr)
+				for errScanner.Scan() {
+					fmt.Printf("YouTube Error: %s\n", errScanner.Text())
+				}
+			}()
 
-	// Keep the main thread alive
+			scanner := bufio.NewScanner(stdout)
+			for scanner.Scan() {
+				var data struct {
+					Author  string `json:"author"`
+					Message string `json:"message"`
+				}
+				if err := json.Unmarshal(scanner.Bytes(), &data); err == nil {
+					printFormattedMessage(data.Author, data.Message, "yt")
+				}
+			}
+			cmd.Wait()
+		}()
+	}
+
 	select {}
 }
