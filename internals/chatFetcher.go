@@ -34,7 +34,7 @@ func getColoredUser(displayName string) string {
 }
 
 func getColoredYTUser(displayName string) string {
-	return ytUserColor.Sprint(displayName)
+	return ytUserColor.Sprintd(displayName)
 }
 
 func printMessage(author, message string) {
