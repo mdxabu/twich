@@ -18,6 +18,7 @@ import (
 //go:embed yt_proxy.py
 var ytProxySource string
 
+
 var (
 	MessageColor = color.New(color.FgHiWhite)
 	timeColor    = color.New(color.FgYellow)
