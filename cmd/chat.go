@@ -12,24 +12,36 @@ import (
 
 var (
 	twitchUser string
-	ytVideoID  string
+	ytChannel  string
 )
 
 // chatCmd represents the chat command
 var chatCmd = &cobra.Command{
 	Use:   "chat",
 	Short: "Fetch live chat from Twitch and YouTube simultaneously",
-	Long: `This command connects to a Twitch channel's IRC chat and 
+	Long: `This command connects to a Twitch channel's IRC chat and
 scrapes a YouTube Live stream chat using a Python bridge.
-Example: twich chat -t helpytv -y JFfPyuo67E8`,
+
+The -y flag accepts a YouTube @handle, channel username, full channel URL,
+or a raw video ID. The tool will automatically resolve the channel's
+currently active live stream.
+
+Examples:
+  twich chat -t helpytv -y @mkbhd
+  twich chat -y mkbhd
+  twich chat -y https://www.youtube.com/@mkbhd
+  twich chat -y JFfPyuo67E8
+  twich chat -t helpytv`,
 
 	Run: func(cmd *cobra.Command, args []string) {
-		if twitchUser == "" && ytVideoID == "" {
-			log.Fatal("Please provide at least a Twitch username (-t) or a YouTube Video ID (-y)")
+		if twitchUser == "" && ytChannel == "" {
+			log.Fatal("Please provide at least a Twitch username (-t) or a YouTube channel (-y)")
 		}
 
-		// Calling the new combined function from your internals package
-		chat.FetchCombinedChat(twitchUser, ytVideoID)
+		// Calling the combined function from the internals package.
+		// ytChannel can be a @handle, username, URL, or raw video ID —
+		// the Python proxy resolves it to the active live stream automatically.
+		chat.FetchCombinedChat(twitchUser, ytChannel)
 	},
 }
 
@@ -38,5 +50,5 @@ func init() {
 
 	// Defining separate flags for Twitch and YouTube
 	chatCmd.Flags().StringVarP(&twitchUser, "twitch", "t", "", "Twitch username to fetch chat from")
-	chatCmd.Flags().StringVarP(&ytVideoID, "youtube", "y", "", "YouTube Video ID to fetch chat from")
+	chatCmd.Flags().StringVarP(&ytChannel, "youtube", "y", "", "YouTube channel @handle, username, URL, or video ID")
 }
