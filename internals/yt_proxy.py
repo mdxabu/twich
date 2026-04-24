@@ -1,3 +1,7 @@
+"""
+Copyright © 2026 @mdxabu
+"""
+
 import json
 import re
 import sys
