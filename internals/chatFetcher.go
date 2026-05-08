@@ -63,7 +63,7 @@ func getColoredYTUser(displayName string) string {
 		c = color.New(ytUserColors[rand.Intn(len(ytUserColors))])
 		ytUserColorMap[displayName] = c
 	}
-	return c.Sprint("@" + displayName)
+	return c.Sprint(displayName)
 }
 
 // printMessage formats and immediately prints a chat message to stdout.
